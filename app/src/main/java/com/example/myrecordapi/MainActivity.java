@@ -2,6 +2,7 @@ package com.example.myrecordapi;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
@@ -23,6 +24,7 @@ public class MainActivity extends AppCompatActivity {
 
     private TextInputEditText name, email, phone, address ;
     private Button submit, getRecords ;
+    private ProgressDialog progressDialog ;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,9 +38,15 @@ public class MainActivity extends AppCompatActivity {
         submit = findViewById(R.id.submit_btn);
         getRecords = findViewById(R.id.records_btn);
 
+        progressDialog = new ProgressDialog(this);
+        progressDialog.setCanceledOnTouchOutside(false);
+        progressDialog.setTitle("Creating a new user record");
+        progressDialog.setMessage("Please wait while we check the credentials ...");
+
         submit.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                progressDialog.show();
                 submitForm(name, email, phone, address);
             }
         });
@@ -56,18 +64,22 @@ public class MainActivity extends AppCompatActivity {
     {
         if(TextUtils.isEmpty(name.getText()))
         {
+            progressDialog.dismiss();
             name.setError("Name cannot be empty");
             return;
         }else if(TextUtils.isEmpty(email.getText()) || !Patterns.EMAIL_ADDRESS.matcher(email.getText()).matches())
         {
+            progressDialog.dismiss();
             email.setError("Invalid Email");
             return;
         }else if(TextUtils.isEmpty(phone.getText()))
         {
+            progressDialog.dismiss();
             phone.setError("Name cannot be empty");
             return;
         }else if(TextUtils.isEmpty(address.getText()))
         {
+            progressDialog.dismiss();
             address.setError("Name cannot be empty");
             return;
         }else
@@ -80,21 +92,25 @@ public class MainActivity extends AppCompatActivity {
                     public void onResponse(Call<ApiModel> call, Response<ApiModel> response) {
                         if(response.code() == 201)
                         {
-                            Toast.makeText(MainActivity.this, response.message(), Toast.LENGTH_SHORT).show();
+                            progressDialog.dismiss();
+                            Toast.makeText(MainActivity.this, "Success", Toast.LENGTH_SHORT).show();
                             startActivity(new Intent(MainActivity.this, HomeActivity.class));
                         }else
                         {
+                            progressDialog.dismiss();
                             Toast.makeText(MainActivity.this, "Error: "+response.code() , Toast.LENGTH_SHORT).show();
                         }
                     }
 
                     @Override
                     public void onFailure(Call<ApiModel> call, Throwable t) {
+                        progressDialog.dismiss();
                         Toast.makeText(MainActivity.this, t.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
                     }
                 });
             }catch (Error error)
             {
+                progressDialog.dismiss();
                 Toast.makeText(this, "Error : " + error.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
             }
         }
